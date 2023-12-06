@@ -83,11 +83,20 @@ class _TaskListState extends State<TaskList>
   Widget build(BuildContext context) {
     super.build(context);
     // updateTasks();
-    return ListView.builder(
-      itemBuilder: (context, i) {
-        return _tasks[i];
-      },
-      itemCount: _tasks.length,
+    return ReorderableListView.builder(
+       // clipBehavior: Clip.antiAlias,
+       itemBuilder: (context, i) {
+         return _tasks[i];
+       },
+       itemCount: _tasks.length,
+       onReorder: (int oldIndex, int newIndex) {
+         setState(() {
+           int index = newIndex > oldIndex ? newIndex - 1 : newIndex;
+           final task = _tasks.removeAt(oldIndex);
+
+           _tasks.insert(index, task);
+         });
+       },
     );
   }
 

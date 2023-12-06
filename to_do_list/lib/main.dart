@@ -5,15 +5,13 @@ import 'firebase_options.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 
-void main() {
-  runApp(const MyApp());
-  startBackend();
-}
-Future<void> startBackend() async {
+Future main() async {
   await Firebase.initializeApp(
   options: DefaultFirebaseOptions.currentPlatform,
   );
+  runApp(const MyApp());
 }
+
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 

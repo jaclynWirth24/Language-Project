@@ -41,6 +41,7 @@ class _TaskBoardState extends State<TaskBoard>
       tasks.add(Task(
         "$i",
         description: "This is description number $i for task numer $i",
+        taskId: "Task$i"
       ));
     }
     return DefaultTabController(
@@ -105,7 +106,8 @@ class _TaskListState extends State<TaskList>
     super.initState();
     List<Task> rawTasks = widget.tasks;
     for (int i = 0; i < rawTasks.length; i++) {
-      _tasks.add(TaskCard(rawTasks[i]));
+      _tasks.add(TaskCard(rawTasks[i],
+        key: ValueKey(rawTasks[i].taskId)));
     }
   }
 
@@ -153,7 +155,8 @@ class _TaskCardState extends State<TaskCard> {
 class Task {
   String title;
   String? description;
-  Task(this.title, {this.description});
+  String taskId;
+  Task(this.title, {this.taskId = '-1', this.description});
 
   @override
   String toString() {

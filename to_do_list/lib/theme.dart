@@ -15,7 +15,6 @@ class LifeListTheme with ChangeNotifier {
           ),
         ),
       ),
-
       floatingActionButtonTheme: FloatingActionButtonThemeData(
         splashColor: Colors.purple.shade400,
         backgroundColor: themePurple,

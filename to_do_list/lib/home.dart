@@ -43,19 +43,33 @@ class _TaskBoardState extends State<TaskBoard>
         description: "This is description number $i for task numer $i",
       ));
     }
-    return Scaffold(
-      floatingActionButton: const NewTaskButton(),
-      appBar: AppBar(
-        // automaticallyImplyLeading: false,
-        title: const Text('Task Board'),
+    return DefaultTabController(
+      length: 3,
+      child: Scaffold(
+        floatingActionButton: const NewTaskButton(),
+        appBar: AppBar(
+          // automaticallyImplyLeading: false,
+          title: const Text('Task Board'),
+          bottom: const TabBar(
+            tabs: [
+              Text("Doing"),
+              Text("Done"),
+            ],
+          ),
+        ),
+        body: TabBarView(
+          children: [
+            TaskList(tasks),
+            TaskList(tasks),
+          ],
+        ),
       ),
-      body: TaskList(tasks),
     );
   }
 }
 
 class TaskList extends StatefulWidget {
-  const TaskList(this.tasks, {Key? key}) : super(key: key);
+  TaskList(this.tasks, {Key? key}) : super(key: key);
   final List<Task> tasks;
   @override
   State<TaskList> createState() => _TaskListState();
@@ -68,7 +82,7 @@ class _TaskListState extends State<TaskList>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    updateTasks();
+    // updateTasks();
     return ListView.builder(
       itemBuilder: (context, i) {
         return _tasks[i];
@@ -77,23 +91,12 @@ class _TaskListState extends State<TaskList>
     );
   }
 
-  void updateTasks() {
-    int start = _tasks.length;
+  @override
+  void initState() {
+    super.initState();
     List<Task> rawTasks = widget.tasks;
-
-    //adds tasks to list if any were added
-    for (int i = start; i < rawTasks.length; i++) {
+    for (int i = 0; i < rawTasks.length; i++) {
       _tasks.add(TaskCard(rawTasks[i]));
-    }
-
-    //Removes tasks if any were removed
-    if (start > rawTasks.length) {
-      for (int i = 0; i < _tasks.length; i++) {
-        TaskCard indexTaskCard = _tasks[i] as TaskCard;
-        if (!rawTasks.contains(indexTaskCard.task)) {
-          _tasks.remove(indexTaskCard);
-        }
-      }
     }
   }
 
@@ -124,12 +127,14 @@ class _TaskCardState extends State<TaskCard> {
   Widget build(BuildContext context) {
     return FractionallySizedBox(
       widthFactor: .90,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          TaskTitle(widget.task.title),
-          TaskDescription(widget.task.description ?? "")
-        ],
+      child: TaskCardContainer(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            TaskTitle(widget.task.title),
+            TaskDescription(widget.task.description ?? "")
+          ],
+        ),
       ),
     );
   }

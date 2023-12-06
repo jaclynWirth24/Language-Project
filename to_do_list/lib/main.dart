@@ -1,10 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:to_do_list/home.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 
 void main() {
   runApp(const MyApp());
+  startBackend();
 }
-
+Future<void> startBackend() async {
+  await Firebase.initializeApp(
+  options: DefaultFirebaseOptions.currentPlatform,
+  );
+}
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 

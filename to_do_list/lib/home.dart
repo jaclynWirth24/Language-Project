@@ -1,5 +1,8 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:to_do_list/theme.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 
 class Home extends StatefulWidget {
   const Home({Key? key}) : super(key: key);
@@ -38,14 +41,12 @@ class _TaskBoardState extends State<TaskBoard>
 
     //!HARD CODED NUMBERED TASKS TO SIMULATE WHAT IT WILL LOOK LIKE
     for (int i = 1; i <= 2; i++) {
-      tasks.add(Task(
-        "$i",
-        description: "This is description number $i for task numer $i",
-        taskId: "Task$i"
-      ));
+      tasks.add(Task("$i",
+          description: "This is description number $i for task numer $i",
+          taskId: "Task$i"));
     }
     return DefaultTabController(
-      length: 3,
+      length: 2,
       child: Scaffold(
         floatingActionButton: const NewTaskButton(),
         appBar: AppBar(
@@ -83,22 +84,40 @@ class _TaskListState extends State<TaskList>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    // updateTasks();
-    return ReorderableListView.builder(
-       // clipBehavior: Clip.antiAlias,
-       itemBuilder: (context, i) {
-         return _tasks[i];
-       },
-       itemCount: _tasks.length,
-       onReorder: (int oldIndex, int newIndex) {
-         setState(() {
-           int index = newIndex > oldIndex ? newIndex - 1 : newIndex;
-           final task = _tasks.removeAt(oldIndex);
+    return StreamBuilder(
+        stream: FirebaseFirestore.instance.collection("Task").snapshots(),
+        builder: (context, snapshot) {
+          if (!snapshot.hasData) return const Text("Loading...");
 
-           _tasks.insert(index, task);
-         });
-       },
-    );
+          int? size = snapshot.data!.size;
+          var docs = snapshot.data!.docs;
+
+          for (var doc in docs) {
+            var title = doc.get("title");
+            var done = doc.get("done");
+            var description = doc.get("description");
+            var taskId = doc.get("taskID");
+            Task myTask = Task(title,
+                description: description, taskId: taskId, isDone: done);
+            _tasks.add(TaskCard(myTask, key: ValueKey(taskId)));
+          }
+
+          return ReorderableListView.builder(
+            clipBehavior: Clip.antiAlias,
+            itemBuilder: (context, i) {
+              return _tasks[i];
+            },
+            itemCount: _tasks.length,
+            onReorder: (int oldIndex, int newIndex) {
+              setState(() {
+                int index = newIndex > oldIndex ? newIndex - 1 : newIndex;
+                final task = _tasks.removeAt(oldIndex);
+
+                _tasks.insert(index, task);
+              });
+            },
+          );
+        });
   }
 
   @override
@@ -106,8 +125,7 @@ class _TaskListState extends State<TaskList>
     super.initState();
     List<Task> rawTasks = widget.tasks;
     for (int i = 0; i < rawTasks.length; i++) {
-      _tasks.add(TaskCard(rawTasks[i],
-        key: ValueKey(rawTasks[i].taskId)));
+      _tasks.add(TaskCard(rawTasks[i], key: ValueKey(rawTasks[i].taskId)));
     }
   }
 
@@ -156,7 +174,8 @@ class Task {
   String title;
   String? description;
   String taskId;
-  Task(this.title, {this.taskId = '-1', this.description});
+  bool isDone;
+  Task(this.title, {this.taskId = '-1', this.description, this.isDone = false});
 
   @override
   String toString() {

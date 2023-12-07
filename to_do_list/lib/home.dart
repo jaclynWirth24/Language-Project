@@ -4,21 +4,29 @@ import 'package:to_do_list/theme.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 
-class Home extends StatefulWidget {
-  const Home({Key? key}) : super(key: key);
-  @override
-  State<Home> createState() => _HomeState();
-}
+class InheritedTasks extends InheritedWidget {
+  InheritedTasks(this.allTasks, {required Widget child, Key? key})
+      : super(key: key, child: child);
 
-class _HomeState extends State<Home> {
+  final List<List<Task>> allTasks;
+
+  Function swapTabs = (bool done, var allTasks, Task task) {
+    if (done) {
+      allTasks[0].remove(task);
+      allTasks[1].add(task);
+    } else {
+      allTasks[1].remove(task);
+      allTasks[0].add(task);
+    }
+  };
+
   @override
-  void initState() {
-    super.initState();
+  bool updateShouldNotify(covariant InheritedTasks oldWidget) {
+    return true;
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return const TaskBoard();
+  static InheritedTasks? of(BuildContext context) {
+    return context.dependOnInheritedWidgetOfExactType<InheritedTasks>();
   }
 }
 
@@ -37,15 +45,10 @@ class _TaskBoardState extends State<TaskBoard>
 
   @override
   Widget build(BuildContext context) {
-    List<Task> tasksDoing = [];
-    List<Task> tasksDone = [];
+    var allTasks = InheritedTasks.of(context)!.allTasks;
+    List<Task> tasksDoing = allTasks[0];
+    List<Task> tasksDone = allTasks[1];
 
-    // //!HARD CODED NUMBERED TASKS TO SIMULATE WHAT IT WILL LOOK LIKE
-    // for (int i = 1; i <= 2; i++) {
-    //   tasks.add(Task("$i",
-    //       description: "This is description number $i for task numer $i",
-    //       taskId: "Task$i"));
-    // }
     return DefaultTabController(
       length: 2,
       child: Scaffold(
@@ -89,9 +92,8 @@ class _TaskListState extends State<TaskList>
     return StreamBuilder(
         stream: FirebaseFirestore.instance.collection("Task").snapshots(),
         builder: (context, snapshot) {
-          if (!snapshot.hasData) return const Text("Loading...");
+          if (!snapshot.hasData) return const Center(child: Text("Loading..."));
 
-          int? size = snapshot.data!.size;
           var docs = snapshot.data!.docs;
 
           for (var doc in docs) {
@@ -122,16 +124,6 @@ class _TaskListState extends State<TaskList>
             },
           );
         });
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    List<Task> rawTasks = widget.tasks;
-    for (int i = 0; i < rawTasks.length; i++) {
-      _tasks
-          .add(TaskCard(rawTasks[i], false, key: ValueKey(rawTasks[i].taskId)));
-    }
   }
 
   @override
@@ -169,6 +161,7 @@ class _TaskCardState extends State<TaskCard> {
 
   @override
   Widget build(BuildContext context) {
+    var allTasks = InheritedTasks.of(context)!.allTasks;
     return FractionallySizedBox(
       widthFactor: .90,
       child: TaskCardContainer(
@@ -181,6 +174,8 @@ class _TaskCardState extends State<TaskCard> {
               onChanged: (bool? value) {
                 setState(() {
                   isChecked = value;
+                  setState(InheritedTasks.of(context)!
+                      .swapTabs(value!, allTasks, widget.task));
                 });
               },
             ),

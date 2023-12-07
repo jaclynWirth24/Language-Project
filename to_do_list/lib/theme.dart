@@ -4,22 +4,51 @@ class LifeListTheme with ChangeNotifier {
   static const Color themeBlue = Color.fromRGBO(93, 180, 242, 1);
   static const Color themeOrange = Color.fromRGBO(161, 102, 13, 1);
   static const Color themePurple = Color.fromRGBO(102, 13, 161, 1);
+  static const Color themeDarkBlue = Color.fromRGBO(9, 55, 88, 1);
 
-  static ThemeData get lightTheme {
+  static ThemeData get myTheme {
+    Color getColor(Set<MaterialState> states) {
+      const Set<MaterialState> interactiveStates = <MaterialState>{
+        MaterialState.pressed,
+        MaterialState.hovered,
+        MaterialState.focused,
+      };
+      if (states.any(interactiveStates.contains)) {
+        return Colors.blue;
+      }
+      return Colors.red;
+    }
+
     return ThemeData(
-      colorScheme: const ColorScheme.dark(background: Color.fromRGBO(93, 180, 242, 100)),
+      splashColor: themeDarkBlue,
+      tabBarTheme:  TabBarTheme(
+          // splashFactory: InkRipple.splashFactory.copyWith(
+          //   splashColor: Colors.green, // Customize the splash color here
+          // ),
+          // indicator: UnderlineTabIndicator(
+          //   borderSide: BorderSide(
+          //       width: 4.0, color: Colors.blue), // Customize the color here
+          //   insets: EdgeInsets.symmetric(horizontal: 16.0),
+          // ),
+          overlayColor: MaterialStateProperty.all<Color>(themeBlue),
+          splashFactory: NoSplash.splashFactory,
+          indicatorColor: themeDarkBlue,
+          unselectedLabelStyle: TextStyle(fontSize: 25.0),
+          labelStyle: TextStyle(color: themeDarkBlue, fontSize: 30.0)),
+      colorScheme: const ColorScheme.light(
+          background: Color.fromRGBO(93, 180, 242, 100)),
       appBarTheme: const AppBarTheme(
         backgroundColor: themeBlue,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(
-            bottom: Radius.circular(30),
+            bottom: Radius.circular(0),
           ),
         ),
       ),
-      floatingActionButtonTheme: FloatingActionButtonThemeData(
+      floatingActionButtonTheme: const FloatingActionButtonThemeData(
         // splashColor: Colors.purple.shade400,
         splashColor: Color.fromRGBO(93, 180, 242, 1),
-        backgroundColor: themePurple,
+        backgroundColor: Color.fromRGBO(9, 55, 88, 1),
       ),
     );
   }
@@ -37,7 +66,7 @@ class TaskCardContainer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Container taskCard = Container(
-      margin: const EdgeInsets.all(5),
+      margin: const EdgeInsets.all(8),
       padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
       decoration: BoxDecoration(
         boxShadow: const [

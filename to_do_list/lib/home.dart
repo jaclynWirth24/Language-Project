@@ -99,7 +99,7 @@ class _TaskListState extends State<TaskList>
             var taskId = doc.get("taskID");
             Task myTask = Task(title,
                 description: description, taskId: taskId, isDone: done);
-            _tasks.add(TaskCard(myTask, key: ValueKey(taskId)));
+            _tasks.add(TaskCard(myTask, done, key: ValueKey(taskId)));
           }
 
           return ReorderableListView.builder(
@@ -125,7 +125,7 @@ class _TaskListState extends State<TaskList>
     super.initState();
     List<Task> rawTasks = widget.tasks;
     for (int i = 0; i < rawTasks.length; i++) {
-      _tasks.add(TaskCard(rawTasks[i], key: ValueKey(rawTasks[i].taskId)));
+      _tasks.add(TaskCard(rawTasks[i], false, key: ValueKey(rawTasks[i].taskId)));
     }
   }
 
@@ -145,23 +145,47 @@ class NewTaskButton extends StatelessWidget {
 }
 
 class TaskCard extends StatefulWidget {
-  const TaskCard(this.task, {Key? key}) : super(key: key);
+  TaskCard(this.task, this.isDone, {Key? key}) : super(key: key);
   final Task task;
+  bool isDone;
+
   @override
   State<TaskCard> createState() => _TaskCardState();
 }
 
 class _TaskCardState extends State<TaskCard> {
+  bool? isChecked;
+
+  @override
+  void initState() {
+    super.initState();
+    isChecked = widget.isDone;
+  }
+
   @override
   Widget build(BuildContext context) {
     return FractionallySizedBox(
       widthFactor: .90,
       child: TaskCardContainer(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Row(
           children: [
-            TaskTitle(widget.task.title),
-            TaskDescription(widget.task.description ?? "")
+            Checkbox(
+              checkColor: Colors.white,
+              // fillColor: MaterialStateProperty.resolveWith(getColor),
+              value: isChecked,
+              onChanged: (bool? value) {
+                setState(() {
+                  isChecked = value;
+                });
+              },
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                TaskTitle(widget.task.title),
+                TaskDescription(widget.task.description ?? "")
+              ],
+            ),
           ],
         ),
       ),

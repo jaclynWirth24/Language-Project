@@ -36,6 +36,7 @@ class _HomeState extends State<Home> {
         myTasks[1].remove(task);
         myTasks[0].add(task);
       }
+      task.isDone = !task.isDone;
     });
   }
 }
@@ -131,6 +132,7 @@ class _TaskListState extends State<TaskList>
   Future<void> fetch() async {
     var stream = FirebaseFirestore.instance.collection("Task").snapshots();
     // var allTasks = InheritedTasks.of(context)!.allTasks;
+    widget.tasks.clear(); // Clear existing tas
     stream.forEach((snapshot) {
       var docs = snapshot.docs;
 
@@ -143,7 +145,6 @@ class _TaskListState extends State<TaskList>
           Task myTask = Task(title,
               description: description, taskId: taskId, isDone: done);
 
-          _tasks.add(TaskCard(myTask, done, key: ValueKey(taskId)));
           widget.tasks.add(myTask);
           // done ? allTasks[1].add(myTask) : allTasks[0].add(myTask);
         }
@@ -154,18 +155,23 @@ class _TaskListState extends State<TaskList>
   @override
   Widget build(BuildContext context) {
     super.build(context);
+
+    // for(var task in widget.tasks) {
+    //    _tasks.add(TaskCard(task, task.isDone, key: ValueKey(task.taskId)));
+    // }
     return ReorderableListView.builder(
       clipBehavior: Clip.antiAlias,
       itemBuilder: (context, i) {
-        return _tasks[i];
+        return TaskCard(widget.tasks[i], widget.tasks[i].isDone,
+            key: ValueKey(widget.tasks[i].taskId));
       },
-      itemCount: _tasks.length,
+      itemCount: widget.tasks.length,
       onReorder: (int oldIndex, int newIndex) {
         setState(() {
           int index = newIndex > oldIndex ? newIndex - 1 : newIndex;
-          final task = _tasks.removeAt(oldIndex);
+          final task = widget.tasks.removeAt(oldIndex);
 
-          _tasks.insert(index, task);
+          widget.tasks.insert(index, task);
         });
       },
     );

@@ -179,9 +179,18 @@ class _TaskListState extends State<TaskList>
             child: Text(style: TextStyle(fontSize: 30), "Error loading tasks"),
           );
         } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return const Center(
-            child: Text(style: TextStyle(fontSize: 30), "No tasks available"),
-          );
+          List<Widget> children = [
+            const Center(
+              child: Text(style: TextStyle(fontSize: 30), "No tasks available"),
+            )
+          ];
+          var windowUp = InheritedTasks.of(context)!.taskWindowUp;
+
+          if (windowUp) {
+            children.add(NewTaskForm(done: widget.done));
+          }
+
+          return Stack(children: children);
         } else {
           _tasks = snapshot.data!;
           List<Widget> children = [
@@ -189,7 +198,7 @@ class _TaskListState extends State<TaskList>
               clipBehavior: Clip.antiAlias,
               itemBuilder: (context, i) {
                 return TaskCard(_tasks[i], widget.done,
-                    key: ValueKey(_tasks[i].taskId));
+                    key: ValueKey(_tasks[i].id));
               },
               itemCount: _tasks.length,
               onReorder: (int oldIndex, int newIndex) {
@@ -277,10 +286,7 @@ class _TaskCardState extends State<TaskCard> {
   }
 
   updateTab(bool val) {
-    var allTasks = InheritedTasks.of(context)!.allTasks;
     InheritedTasks.of(context)!.swapTabs(!val, widget.task);
-
-    // setState((/) {});
   }
 }
 
@@ -326,21 +332,15 @@ class _NewTaskFormState extends State<NewTaskForm> {
       taskId: '-1',
       description: description,
     );
-    List allTasks = InheritedTasks.of(context)!.allTasks;
-    int index = widget.done ? 1 : 0;
-    allTasks[index].add(newTask);
+
+    final task = <String, dynamic>{
+      "title": title,
+      "description": description,
+      "done": widget.done,
+      "taskID": "-1",
+    };
+    FirebaseFirestore.instance.collection("Task").add(task);
     InheritedTasks.of(context)!.toggleCreateTaskWindow();
-
-    // final task = <String, dynamic>{
-    //   "name": "Los Angeles",
-    //   "state": "CA",
-    //   "country": "USA"
-    // };
-
-    // db
-    // .collection("cities")
-    // .doc("LA")
-    // .set(city)
   }
 
   @override

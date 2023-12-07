@@ -7,6 +7,7 @@ class LifeListTheme with ChangeNotifier {
 
   static ThemeData get lightTheme {
     return ThemeData(
+      colorScheme: const ColorScheme.dark(background: Color.fromRGBO(93, 180, 242, 100)),
       appBarTheme: const AppBarTheme(
         backgroundColor: themeBlue,
         shape: RoundedRectangleBorder(

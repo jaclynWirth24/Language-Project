@@ -37,14 +37,15 @@ class _TaskBoardState extends State<TaskBoard>
 
   @override
   Widget build(BuildContext context) {
-    List<Task> tasks = [];
+    List<Task> tasksDoing = [];
+    List<Task> tasksDone = [];
 
-    //!HARD CODED NUMBERED TASKS TO SIMULATE WHAT IT WILL LOOK LIKE
-    for (int i = 1; i <= 2; i++) {
-      tasks.add(Task("$i",
-          description: "This is description number $i for task numer $i",
-          taskId: "Task$i"));
-    }
+    // //!HARD CODED NUMBERED TASKS TO SIMULATE WHAT IT WILL LOOK LIKE
+    // for (int i = 1; i <= 2; i++) {
+    //   tasks.add(Task("$i",
+    //       description: "This is description number $i for task numer $i",
+    //       taskId: "Task$i"));
+    // }
     return DefaultTabController(
       length: 2,
       child: Scaffold(
@@ -61,8 +62,8 @@ class _TaskBoardState extends State<TaskBoard>
         ),
         body: TabBarView(
           children: [
-            TaskList(tasks),
-            TaskList(tasks),
+            TaskList(tasksDoing, false),
+            TaskList(tasksDone, true),
           ],
         ),
       ),
@@ -71,8 +72,9 @@ class _TaskBoardState extends State<TaskBoard>
 }
 
 class TaskList extends StatefulWidget {
-  TaskList(this.tasks, {Key? key}) : super(key: key);
+  TaskList(this.tasks, this.done, {Key? key}) : super(key: key);
   final List<Task> tasks;
+  bool done;
   @override
   State<TaskList> createState() => _TaskListState();
 }
@@ -93,13 +95,15 @@ class _TaskListState extends State<TaskList>
           var docs = snapshot.data!.docs;
 
           for (var doc in docs) {
-            var title = doc.get("title");
             var done = doc.get("done");
-            var description = doc.get("description");
-            var taskId = doc.get("taskID");
-            Task myTask = Task(title,
-                description: description, taskId: taskId, isDone: done);
-            _tasks.add(TaskCard(myTask, done, key: ValueKey(taskId)));
+            if (widget.done == done) {
+              var title = doc.get("title");
+              var description = doc.get("description");
+              var taskId = doc.get("taskID");
+              Task myTask = Task(title,
+                  description: description, taskId: taskId, isDone: done);
+              _tasks.add(TaskCard(myTask, done, key: ValueKey(taskId)));
+            }
           }
 
           return ReorderableListView.builder(
@@ -125,7 +129,8 @@ class _TaskListState extends State<TaskList>
     super.initState();
     List<Task> rawTasks = widget.tasks;
     for (int i = 0; i < rawTasks.length; i++) {
-      _tasks.add(TaskCard(rawTasks[i], false, key: ValueKey(rawTasks[i].taskId)));
+      _tasks
+          .add(TaskCard(rawTasks[i], false, key: ValueKey(rawTasks[i].taskId)));
     }
   }
 

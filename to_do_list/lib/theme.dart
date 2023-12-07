@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class LifeListTheme with ChangeNotifier {
-  static const Color themeBlue = Color.fromRGBO(13, 71, 161, 1);
+  static const Color themeBlue = Color.fromRGBO(93, 180, 242, 1);
   static const Color themeOrange = Color.fromRGBO(161, 102, 13, 1);
   static const Color themePurple = Color.fromRGBO(102, 13, 161, 1);
 

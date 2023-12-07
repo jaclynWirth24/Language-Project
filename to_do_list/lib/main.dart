@@ -26,9 +26,7 @@ class MyApp extends StatelessWidget {
 
         // Once complete, show your application
         if (snapshot.connectionState == ConnectionState.done) {
-          List<List<Task>> allTasks = List.empty();
-          allTasks.add(List.empty());
-          allTasks.add(List.empty());
+    
           return MaterialApp(
             title: 'Flutter Demo',
             theme: ThemeData(
@@ -50,7 +48,7 @@ class MyApp extends StatelessWidget {
               colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
               useMaterial3: true,
             ),
-            home: InheritedTasks(allTasks, child: const TaskBoard()),
+            home: const Home(),
           );
         }
 

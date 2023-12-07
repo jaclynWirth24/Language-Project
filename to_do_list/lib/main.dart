@@ -21,8 +21,10 @@ class MyApp extends StatelessWidget {
       builder: (context, snapshot) {
         // Check for errors
         if (snapshot.hasError) {
-          return const Directionality(
-              textDirection: TextDirection.ltr, child: Text("Error"));
+          return const Center(
+            child: Directionality(
+                textDirection: TextDirection.ltr, child: Text("Error")),
+          );
         }
 
         // Once complete, show your application
@@ -35,8 +37,10 @@ class MyApp extends StatelessWidget {
         }
 
         // Otherwise, show something whilst waiting for initialization to complete
-        return const Directionality(
-            textDirection: TextDirection.ltr, child: Text("Loading"));
+        return const Center(
+          child: Directionality(
+              textDirection: TextDirection.ltr, child: Text("Loading")),
+        );
       },
     );
   }

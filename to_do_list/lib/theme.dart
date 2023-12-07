@@ -20,8 +20,30 @@ class LifeListTheme with ChangeNotifier {
     }
 
     return ThemeData(
+      inputDecorationTheme: const InputDecorationTheme(
+        focusedBorder: OutlineInputBorder(
+          borderSide: BorderSide(
+              color: themeDarkBlue), // Color of the line when focused
+        ),
+      ),
       splashColor: themeDarkBlue,
-      tabBarTheme:  TabBarTheme(
+      elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ButtonStyle(
+              overlayColor: MaterialStateProperty.all<Color>(themeBlue),
+              textStyle: MaterialStateProperty.resolveWith<TextStyle>(
+                  (Set<MaterialState> states) {
+                // Define the base TextStyle
+                return const TextStyle(
+                  fontSize: 18.0,
+                  fontWeight: FontWeight.bold,
+                );
+              }),
+              foregroundColor:
+                  MaterialStateProperty.all<Color>(themeDarkBlue))),
+      checkboxTheme: CheckboxThemeData(
+          fillColor: MaterialStateProperty.all<Color>(themeDarkBlue),
+          overlayColor: MaterialStateProperty.all<Color>(themeBlue)),
+      tabBarTheme: TabBarTheme(
           // splashFactory: InkRipple.splashFactory.copyWith(
           //   splashColor: Colors.green, // Customize the splash color here
           // ),
@@ -56,13 +78,17 @@ class LifeListTheme with ChangeNotifier {
 
 //! ///////////////////////////////////CUSTOM CLASSES//////////////////////////////////////////
 class TaskCardContainer extends StatelessWidget {
-  const TaskCardContainer({this.isLarge = false, required this.child, Key? key})
+  TaskCardContainer({this.isLarge = false, required this.child, Key? key})
       : super(key: key);
-  const TaskCardContainer.large(
-      {this.isLarge = true, required this.child, Key? key})
+  TaskCardContainer.large(
+      {this.isLarge = true,
+      required this.child,
+      Key? key,
+      required double this.sizeFactor})
       : super(key: key);
   final Widget child;
   final bool isLarge;
+  double? sizeFactor;
   @override
   Widget build(BuildContext context) {
     Container taskCard = Container(

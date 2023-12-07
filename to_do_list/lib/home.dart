@@ -1,8 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:to_do_list/theme.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -13,7 +12,7 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
   late List<List<Task>> allTasks;
-
+  bool taskWindowUp = false;
   @override
   void initState() {
     super.initState();
@@ -24,31 +23,42 @@ class _HomeState extends State<Home> {
 
   @override
   Widget build(BuildContext context) {
-    return InheritedTasks(allTasks, swapTabs, child: const TaskBoard());
+    return InheritedTasks(
+        allTasks, swapTabs, toggleCreateTaskWindow, taskWindowUp,
+        child: const TaskBoard());
   }
 
-  void swapTabs(bool done, List<List<Task>> myTasks, Task task) {
+  void swapTabs(bool done, Task myTask) {
     setState(() {
-      if (!done) {
-        myTasks[0].remove(task);
-        myTasks[1].add(task);
-      } else {
-        myTasks[1].remove(task);
-        myTasks[0].add(task);
-      }
-      task.isDone = !task.isDone;
+      String taskNo = myTask.id!;
+      final task = <String, dynamic>{
+        "title": myTask.title,
+        "description": myTask.description,
+        "done": !myTask.isDone,
+        "taskID": myTask.taskId,
+      };
+      FirebaseFirestore.instance.collection("Task").doc(taskNo).set(task);
+      myTask.isDone = !myTask.isDone;
+    });
+  }
+
+  void toggleCreateTaskWindow() {
+    setState(() {
+      taskWindowUp = !taskWindowUp;
     });
   }
 }
 
 class InheritedTasks extends InheritedWidget {
-  InheritedTasks(this.allTasks, this.swapTabs,
+  InheritedTasks(this.allTasks, this.swapTabs, this.toggleCreateTaskWindow,
+      this.taskWindowUp,
       {required Widget child, Key? key})
       : super(key: key, child: child);
 
   final List<List<Task>> allTasks;
-
-  final void Function(bool, List<List<Task>>, Task) swapTabs;
+  bool taskWindowUp = false;
+  final void Function(bool, Task) swapTabs;
+  final void Function() toggleCreateTaskWindow;
 
   @override
   bool updateShouldNotify(covariant InheritedTasks oldWidget) {
@@ -114,65 +124,91 @@ class TaskList extends StatefulWidget {
 
 class _TaskListState extends State<TaskList>
     with AutomaticKeepAliveClientMixin {
-  final List<Widget> _tasks = [];
+  late List<Task> _tasks;
 
   @override
   void initState() {
     super.initState();
-    update();
+    _tasks = [];
   }
 
-  void update() async {
-    await fetch();
-    if (mounted) {
-      setState(() {});
-    }
-  }
+  Future<List<Task>> fetchTasks() async {
+    var snapshot = await FirebaseFirestore.instance.collection("Task").get();
+    var docs = snapshot.docs;
 
-  Future<void> fetch() async {
-    var stream = FirebaseFirestore.instance.collection("Task").snapshots();
-    // var allTasks = InheritedTasks.of(context)!.allTasks;
-    widget.tasks.clear(); // Clear existing tas
-    stream.forEach((snapshot) {
-      var docs = snapshot.docs;
-
-      for (var doc in docs) {
-        var done = doc.get("done");
-        if (widget.done == done) {
-          var title = doc.get("title");
-          var description = doc.get("description");
-          var taskId = doc.get("taskID");
-          Task myTask = Task(title,
-              description: description, taskId: taskId, isDone: done);
-
-          widget.tasks.add(myTask);
-          // done ? allTasks[1].add(myTask) : allTasks[0].add(myTask);
-        }
-      }
-    });
+    return docs
+        .map((doc) {
+          var done = doc.get("done");
+          if (widget.done == done) {
+            var title = doc.get("title");
+            var description = doc.get("description");
+            var taskId = doc.get("taskID");
+            Task myTask = Task(
+              title,
+              description: description,
+              taskId: taskId,
+              isDone: done,
+            );
+            myTask.id = doc.id;
+            return myTask;
+          } else {
+            return null; // Filter out tasks that don't match the desired state
+          }
+        })
+        .where((task) => task != null)
+        .cast<Task>()
+        .toList();
   }
 
   @override
   Widget build(BuildContext context) {
     super.build(context);
 
-    // for(var task in widget.tasks) {
-    //    _tasks.add(TaskCard(task, task.isDone, key: ValueKey(task.taskId)));
-    // }
-    return ReorderableListView.builder(
-      clipBehavior: Clip.antiAlias,
-      itemBuilder: (context, i) {
-        return TaskCard(widget.tasks[i], widget.tasks[i].isDone,
-            key: ValueKey(widget.tasks[i].taskId));
-      },
-      itemCount: widget.tasks.length,
-      onReorder: (int oldIndex, int newIndex) {
-        setState(() {
-          int index = newIndex > oldIndex ? newIndex - 1 : newIndex;
-          final task = widget.tasks.removeAt(oldIndex);
+    return FutureBuilder(
+      future: fetchTasks(),
+      builder: (context, AsyncSnapshot<List<Task>> snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(
+            child: SpinKitFadingCircle(
+              color: LifeListTheme.themeDarkBlue,
+              size: 50.0,
+            ),
+          );
+        } else if (snapshot.hasError) {
+          return const Center(
+            child: Text(style: TextStyle(fontSize: 30), "Error loading tasks"),
+          );
+        } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return const Center(
+            child: Text(style: TextStyle(fontSize: 30), "No tasks available"),
+          );
+        } else {
+          _tasks = snapshot.data!;
+          List<Widget> children = [
+            ReorderableListView.builder(
+              clipBehavior: Clip.antiAlias,
+              itemBuilder: (context, i) {
+                return TaskCard(_tasks[i], widget.done,
+                    key: ValueKey(_tasks[i].taskId));
+              },
+              itemCount: _tasks.length,
+              onReorder: (int oldIndex, int newIndex) {
+                setState(() {
+                  int index = newIndex > oldIndex ? newIndex - 1 : newIndex;
+                  final task = _tasks.removeAt(oldIndex);
+                  _tasks.insert(index, task);
+                });
+              },
+            )
+          ];
+          var windowUp = InheritedTasks.of(context)!.taskWindowUp;
 
-          widget.tasks.insert(index, task);
-        });
+          if (windowUp) {
+            children.add(NewTaskForm(done: widget.done));
+          }
+
+          return Stack(children: children);
+        }
       },
     );
   }
@@ -187,7 +223,7 @@ class NewTaskButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return FloatingActionButton.extended(
       label: const Row(children: [Icon(Icons.add), Text("New Task")]),
-      onPressed: () => {},
+      onPressed: InheritedTasks.of(context)!.toggleCreateTaskWindow,
     );
   }
 }
@@ -219,9 +255,7 @@ class _TaskCardState extends State<TaskCard> {
           children: [
             Checkbox(
               checkColor: Colors.white,
-              // fillColor: MaterialStateProperty.resolveWith(getColor),
               value: isChecked,
-
               onChanged: (val) {
                 isChecked = val;
                 updateTab(val!);
@@ -244,7 +278,9 @@ class _TaskCardState extends State<TaskCard> {
 
   updateTab(bool val) {
     var allTasks = InheritedTasks.of(context)!.allTasks;
-    InheritedTasks.of(context)!.swapTabs(!val, allTasks, widget.task);
+    InheritedTasks.of(context)!.swapTabs(!val, widget.task);
+
+    // setState((/) {});
   }
 }
 
@@ -254,10 +290,137 @@ class Task {
   String? description;
   String taskId;
   bool isDone;
+  String? id;
   Task(this.title, {this.taskId = '-1', this.description, this.isDone = false});
 
   @override
   String toString() {
     return "title: $title, description: $description\n";
+  }
+}
+
+class NewTaskForm extends StatefulWidget {
+  const NewTaskForm({required this.done, Key? key}) : super(key: key);
+  final bool done;
+  @override
+  State<NewTaskForm> createState() => _NewTaskFormState();
+}
+
+class _NewTaskFormState extends State<NewTaskForm> {
+  late TextEditingController _titleController;
+  late TextEditingController _descriptionController;
+  DateTime date = DateTime.now();
+  @override
+  void initState() {
+    super.initState();
+    _titleController = TextEditingController();
+    _descriptionController = TextEditingController();
+  }
+
+  void createTask() async {
+    String title = _titleController.text;
+    String description = _descriptionController.text;
+
+    Task newTask = Task(
+      title,
+      taskId: '-1',
+      description: description,
+    );
+    List allTasks = InheritedTasks.of(context)!.allTasks;
+    int index = widget.done ? 1 : 0;
+    allTasks[index].add(newTask);
+    InheritedTasks.of(context)!.toggleCreateTaskWindow();
+
+    // final task = <String, dynamic>{
+    //   "name": "Los Angeles",
+    //   "state": "CA",
+    //   "country": "USA"
+    // };
+
+    // db
+    // .collection("cities")
+    // .doc("LA")
+    // .set(city)
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        GestureDetector(
+            onTap: InheritedTasks.of(context)!.toggleCreateTaskWindow,
+            child: const DimmedBackground()),
+        Center(
+          child: FractionallySizedBox(
+            widthFactor: .90,
+            heightFactor: .4,
+            child: TaskCardContainer(
+              child: Material(
+                color: Colors.white,
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text("Task Title:"),
+                              SizedBox(
+                                height: 40,
+                                width: 200,
+                                //! //////////////////////////////////////////////////////////////////
+                                child: TextField(
+                                  cursorColor: LifeListTheme.themeDarkBlue,
+                                  maxLength: 64,
+                                  controller: _titleController,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text("Description:"),
+                          SizedBox(
+                            // height: 40,
+                            // width: 200,
+                            child: TextField(
+                              cursorColor: LifeListTheme.themeDarkBlue,
+                              maxLength: 65,
+                              controller: _descriptionController,
+                              minLines: 2,
+                              maxLines: 3,
+                            ),
+                          ),
+                        ],
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: [
+                          ElevatedButton(
+                            onPressed: InheritedTasks.of(context)!
+                                .toggleCreateTaskWindow,
+                            child: const Text("Cancel"),
+                          ),
+                          ElevatedButton(
+                            onPressed: createTask,
+                            child: const Text("Make Task"),
+                          )
+                        ],
+                      )
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
   }
 }

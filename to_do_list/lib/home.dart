@@ -27,15 +27,15 @@ class _HomeState extends State<Home> {
     return InheritedTasks(allTasks, swapTabs, child: const TaskBoard());
   }
 
-  void swapTabs(bool done, Task task) {
+  void swapTabs(bool done, List<List<Task>> myTasks, Task task) {
     setState(() {
-      // if (done) {
-      //   allTasks[0].remove(task);
-      //   // allTasks[1].add(task);
-      // } else {
-      //   allTasks[1].remove(task);
-      //   // allTasks[0].add(task);
-      // }
+      if (!done) {
+        myTasks[0].remove(task);
+        myTasks[1].add(task);
+      } else {
+        myTasks[1].remove(task);
+        myTasks[0].add(task);
+      }
     });
   }
 }
@@ -47,7 +47,7 @@ class InheritedTasks extends InheritedWidget {
 
   final List<List<Task>> allTasks;
 
-  final void Function(bool, Task) swapTabs;
+  final void Function(bool, List<List<Task>>, Task) swapTabs;
 
   @override
   bool updateShouldNotify(covariant InheritedTasks oldWidget) {
@@ -130,6 +130,7 @@ class _TaskListState extends State<TaskList>
 
   Future<void> fetch() async {
     var stream = FirebaseFirestore.instance.collection("Task").snapshots();
+    // var allTasks = InheritedTasks.of(context)!.allTasks;
     stream.forEach((snapshot) {
       var docs = snapshot.docs;
 
@@ -141,7 +142,10 @@ class _TaskListState extends State<TaskList>
           var taskId = doc.get("taskID");
           Task myTask = Task(title,
               description: description, taskId: taskId, isDone: done);
+
           _tasks.add(TaskCard(myTask, done, key: ValueKey(taskId)));
+          widget.tasks.add(myTask);
+          // done ? allTasks[1].add(myTask) : allTasks[0].add(myTask);
         }
       }
     });
@@ -213,7 +217,8 @@ class _TaskCardState extends State<TaskCard> {
               value: isChecked,
 
               onChanged: (val) {
-                // updateTab(val!);
+                isChecked = val;
+                updateTab(val!);
               },
             ),
             Expanded(
@@ -231,9 +236,10 @@ class _TaskCardState extends State<TaskCard> {
     );
   }
 
-  // updateTab(bool val) {
-  //   InheritedTasks.of(context)!.swapTabs(!val, widget.task);
-  // }
+  updateTab(bool val) {
+    var allTasks = InheritedTasks.of(context)!.allTasks;
+    InheritedTasks.of(context)!.swapTabs(!val, allTasks, widget.task);
+  }
 }
 
 // typedef

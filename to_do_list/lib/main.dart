@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:to_do_list/home.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:to_do_list/theme.dart';
-import 'firebase_options.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 
 void main() {
   runApp(const MyApp());
@@ -39,7 +38,11 @@ class MyApp extends StatelessWidget {
         // Otherwise, show something whilst waiting for initialization to complete
         return const Center(
           child: Directionality(
-              textDirection: TextDirection.ltr, child: Text("Loading")),
+              textDirection: TextDirection.ltr,
+              child: SpinKitFadingCircle(
+                color: LifeListTheme.themeDarkBlue,
+                size: 50.0,
+              )),
         );
       },
     );

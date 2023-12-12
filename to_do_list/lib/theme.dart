@@ -2,23 +2,9 @@ import 'package:flutter/material.dart';
 
 class LifeListTheme with ChangeNotifier {
   static const Color themeBlue = Color.fromRGBO(93, 180, 242, 1);
-  static const Color themeOrange = Color.fromRGBO(161, 102, 13, 1);
-  static const Color themePurple = Color.fromRGBO(102, 13, 161, 1);
   static const Color themeDarkBlue = Color.fromRGBO(9, 55, 88, 1);
 
   static ThemeData get myTheme {
-    Color getColor(Set<MaterialState> states) {
-      const Set<MaterialState> interactiveStates = <MaterialState>{
-        MaterialState.pressed,
-        MaterialState.hovered,
-        MaterialState.focused,
-      };
-      if (states.any(interactiveStates.contains)) {
-        return Colors.blue;
-      }
-      return Colors.red;
-    }
-
     return ThemeData(
       inputDecorationTheme: const InputDecorationTheme(
         focusedBorder: OutlineInputBorder(
@@ -44,19 +30,11 @@ class LifeListTheme with ChangeNotifier {
           fillColor: MaterialStateProperty.all<Color>(themeDarkBlue),
           overlayColor: MaterialStateProperty.all<Color>(themeBlue)),
       tabBarTheme: TabBarTheme(
-          // splashFactory: InkRipple.splashFactory.copyWith(
-          //   splashColor: Colors.green, // Customize the splash color here
-          // ),
-          // indicator: UnderlineTabIndicator(
-          //   borderSide: BorderSide(
-          //       width: 4.0, color: Colors.blue), // Customize the color here
-          //   insets: EdgeInsets.symmetric(horizontal: 16.0),
-          // ),
           overlayColor: MaterialStateProperty.all<Color>(themeBlue),
           splashFactory: NoSplash.splashFactory,
           indicatorColor: themeDarkBlue,
-          unselectedLabelStyle: TextStyle(fontSize: 25.0),
-          labelStyle: TextStyle(color: themeDarkBlue, fontSize: 30.0)),
+          unselectedLabelStyle: const TextStyle(fontSize: 25.0),
+          labelStyle: const TextStyle(color: themeDarkBlue, fontSize: 30.0)),
       colorScheme: const ColorScheme.light(
           background: Color.fromRGBO(93, 180, 242, 100)),
       appBarTheme: const AppBarTheme(
@@ -78,17 +56,11 @@ class LifeListTheme with ChangeNotifier {
 
 //! ///////////////////////////////////CUSTOM CLASSES//////////////////////////////////////////
 class TaskCardContainer extends StatelessWidget {
-  TaskCardContainer({this.isLarge = false, required this.child, Key? key})
+  const TaskCardContainer({this.isLarge = false, required this.child, Key? key})
       : super(key: key);
-  TaskCardContainer.large(
-      {this.isLarge = true,
-      required this.child,
-      Key? key,
-      required double this.sizeFactor})
-      : super(key: key);
+
   final Widget child;
   final bool isLarge;
-  double? sizeFactor;
   @override
   Widget build(BuildContext context) {
     Container taskCard = Container(

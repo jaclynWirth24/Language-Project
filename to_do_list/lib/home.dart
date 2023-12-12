@@ -50,13 +50,13 @@ class _HomeState extends State<Home> {
 }
 
 class InheritedTasks extends InheritedWidget {
-  InheritedTasks(this.allTasks, this.swapTabs, this.toggleCreateTaskWindow,
+  const InheritedTasks(this.allTasks, this.swapTabs, this.toggleCreateTaskWindow,
       this.taskWindowUp,
       {required Widget child, Key? key})
       : super(key: key, child: child);
 
   final List<List<Task>> allTasks;
-  bool taskWindowUp = false;
+  final bool taskWindowUp;
   final void Function(bool, Task) swapTabs;
   final void Function() toggleCreateTaskWindow;
 
@@ -115,9 +115,9 @@ class _TaskBoardState extends State<TaskBoard>
 }
 
 class TaskList extends StatefulWidget {
-  TaskList(this.tasks, this.done, {Key? key}) : super(key: key);
+  const TaskList(this.tasks, this.done, {Key? key}) : super(key: key);
   final List<Task> tasks;
-  bool done;
+  final bool done;
   @override
   State<TaskList> createState() => _TaskListState();
 }
@@ -152,7 +152,7 @@ class _TaskListState extends State<TaskList>
             myTask.id = doc.id;
             return myTask;
           } else {
-            return null; // Filter out tasks that don't match the desired state
+            return null;
           }
         })
         .where((task) => task != null)
@@ -238,9 +238,9 @@ class NewTaskButton extends StatelessWidget {
 }
 
 class TaskCard extends StatefulWidget {
-  TaskCard(this.task, this.isDone, {Key? key}) : super(key: key);
+  const TaskCard(this.task, this.isDone, {Key? key}) : super(key: key);
   final Task task;
-  bool isDone;
+  final bool isDone;
 
   @override
   State<TaskCard> createState() => _TaskCardState();
@@ -290,7 +290,6 @@ class _TaskCardState extends State<TaskCard> {
   }
 }
 
-// typedef
 class Task {
   String title;
   String? description;
@@ -326,12 +325,6 @@ class _NewTaskFormState extends State<NewTaskForm> {
   void createTask() async {
     String title = _titleController.text;
     String description = _descriptionController.text;
-
-    Task newTask = Task(
-      title,
-      taskId: '-1',
-      description: description,
-    );
 
     final task = <String, dynamic>{
       "title": title,
@@ -371,7 +364,6 @@ class _NewTaskFormState extends State<NewTaskForm> {
                               SizedBox(
                                 height: 40,
                                 width: 200,
-                                //! //////////////////////////////////////////////////////////////////
                                 child: TextField(
                                   cursorColor: LifeListTheme.themeDarkBlue,
                                   maxLength: 64,
